@@ -122,10 +122,10 @@
     <tbody id="accountsTableBody"></tbody>
   </table>
 
-  <!-- Supabase JS v1 (UMD) desde unpkg -->
-  <script src="https://unpkg.com/@supabase/supabase-js@1.35.7/dist/umd/supabase.min.js"></script>
+  <!-- TODO el código JS va en un módulo ES -->
+  <script type="module">
+    import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-  <script>
     // 🔑 DATOS DE TU PROYECTO SUPABASE
     const SUPABASE_URL = "https://zflewnplzaiarasfuzcf.supabase.co";
     const SUPABASE_ANON_KEY =
@@ -134,9 +134,9 @@
     // Usuario fijo (vos)
     const USER_ID = "00000000-0000-0000-0000-000000000001";
 
-    // 👉 CONEXIÓN A SUPABASE (v1)
-    console.log("supabase global:", window.supabase); // debug
-    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    // 👉 CONEXIÓN A SUPABASE (v2, sin variables globales)
+    const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    console.log("Supabase client creado:", supabaseClient);
 
     function formatCurrency(num) {
       const n = Number(num);
@@ -168,6 +168,9 @@
           .eq("user_id", USER_ID);
 
         if (txError) throw txError;
+
+        console.log("Accounts:", accounts);
+        console.log("Transactions:", transactions);
 
         updateCards(accounts, transactions);
         updateAccountsTable(accounts);
