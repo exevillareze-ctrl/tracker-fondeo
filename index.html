@@ -122,19 +122,21 @@
     <tbody id="accountsTableBody"></tbody>
   </table>
 
-  <!-- Cargamos Supabase JS desde CDN, sin módulos -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- Supabase JS v2 desde CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 
   <script>
     // 🔑 TUS DATOS DE SUPABASE
     const SUPABASE_URL = "https://zflewnplzaiarasfuzcf.supabase.co";
-    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpmbGV3bnBsemFpYXJhc2Z1emNmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ2MTIwMzEsImV4cCI6MjA4MDE4ODAzMX0.UgdX9H7QOKWpDLpApMYzCaA01oIxT9r2psnvJYfkcgg";
+    const SUPABASE_ANON_KEY =
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpmbGV3bnBsemFpYXJhc2Z1emNmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ2MTIwMzEsImV4cCI6MjA4MDE4ODAzMX0.UgdX9H7QOKWpDLpApMYzCaA01oIxT9r2psnvJYfkcgg";
 
     // Usuario fijo (solo vos por ahora)
     const USER_ID = "00000000-0000-0000-0000-000000000001";
 
-    // Cliente Supabase usando la variable global window.supabase
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    // ⬇️ ESTA ES LA FORMA CORRECTA CON EL CDN UMD
+    const { createClient } = window.supabase;
+    const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     function formatCurrency(num) {
       const n = Number(num);
@@ -152,81 +154,5 @@
 
       try {
         // Cuentas
-        const { data: accounts, error: accError } = await supabase
-          .from("accounts")
-          .select("*")
-          .eq("user_id", USER_ID);
-
-        if (accError) throw accError;
-
-        // Transacciones
-        const { data: transactions, error: txError } = await supabase
-          .from("transactions")
-          .select("*")
-          .eq("user_id", USER_ID);
-
-        if (txError) throw txError;
-
-        updateCards(accounts, transactions);
-        updateAccountsTable(accounts);
-
-      } catch (err) {
-        console.error("Error cargando datos:", err);
-        errorBox.style.display = "block";
-        errorBox.textContent =
-          "Error al cargar datos desde Supabase. Abrí la consola del navegador para más detalles.";
-      }
-    }
-
-    function updateCards(accounts, transactions) {
-      const evals = accounts.filter(a => a.type === "evaluation").length;
-      const live = accounts.filter(a => a.type === "live").length;
-
-      const expenses = transactions
-        .filter(t => t.type === "expense")
-        .reduce((sum, t) => sum + Number(t.amount || 0), 0);
-
-      const withdrawals = transactions
-        .filter(t => t.type === "withdrawal")
-        .reduce((sum, t) => sum + Number(t.amount || 0), 0);
-
-      const net = withdrawals - expenses;
-
-      document.getElementById("evaluations").textContent = evals;
-      document.getElementById("liveAccounts").textContent = live;
-      document.getElementById("fundingRatio").textContent =
-        evals === 0 ? "-" : ((live / evals) * 100).toFixed(1) + "%";
-
-      document.getElementById("expenses").textContent = formatCurrency(expenses);
-      document.getElementById("withdrawals").textContent = formatCurrency(withdrawals);
-
-      const netEl = document.getElementById("netProfit");
-      const label = document.getElementById("netProfitLabel");
-      netEl.textContent = formatCurrency(net);
-
-      if (net > 0) {
-        netEl.classList.add("positive");
-        netEl.classList.remove("negative");
-        label.textContent = "BENEFICIO NETO (positivo)";
-      } else if (net < 0) {
-        netEl.classList.add("negative");
-        netEl.classList.remove("positive");
-        label.textContent = "BENEFICIO NETO (negativo)";
-      } else {
-        netEl.classList.remove("positive", "negative");
-        label.textContent = "BENEFICIO NETO";
-      }
-    }
-
-    function updateAccountsTable(accounts) {
-      const tbody = document.getElementById("accountsTableBody");
-      tbody.innerHTML = "";
-
-      if (!accounts || accounts.length === 0) {
-        const tr = document.createElement("tr");
-        const td = document.createElement("td");
-        td.colSpan = 7;
-        td.style.textAlign = "center";
-        td.style.color = "#777";
-        td.textContent = "No hay cuentas c
+        const { data: accounts, error: accError } = await supabaseClient
 
