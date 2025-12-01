@@ -14,7 +14,13 @@
       padding: 20px;
     }
     h1 { font-size: 28px; margin-bottom: 20px; }
-    .card-container { display: flex; gap: 20px; margin-bottom: 25px; flex-wrap: wrap; }
+    h2 { margin-top: 30px; }
+    .card-container {
+      display: flex;
+      gap: 20px;
+      margin-bottom: 25px;
+      flex-wrap: wrap;
+    }
     .card {
       background: #161b22;
       padding: 20px;
@@ -31,14 +37,15 @@
     table {
       width: 100%;
       border-collapse: collapse;
-      margin-top: 25px;
+      margin-top: 15px;
       background: #161b22;
       border-radius: 10px;
       overflow: hidden;
     }
     th, td {
-      padding: 12px;
+      padding: 10px 12px;
       border-bottom: 1px solid #333;
+      font-size: 14px;
     }
     th {
       background-color: #21262d;
@@ -47,7 +54,7 @@
     .tag {
       padding: 4px 8px;
       border-radius: 6px;
-      font-size: 12px;
+      font-size: 11px;
       color: white;
     }
     .tag-eval { background-color: #f39c12; }
@@ -60,6 +67,7 @@
       border-radius: 6px;
       margin-bottom: 20px;
       display: none;
+      font-size: 14px;
     }
   </style>
 </head>
@@ -114,6 +122,111 @@
     <tbody id="accountsTableBody"></tbody>
   </table>
 
-  <!-- SCRIPT FINAL -->
-  <script type="module">
+  <!-- Cargamos Supabase JS desde CDN, sin módulos -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <script>
+    // 🔑 TUS DATOS DE SUPABASE
+    const SUPABASE_URL = "https://zflewnplzaiarasfuzcf.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpmbGV3bnBsemFpYXJhc2Z1emNmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ2MTIwMzEsImV4cCI6MjA4MDE4ODAzMX0.UgdX9H7QOKWpDLpApMYzCaA01oIxT9r2psnvJYfkcgg";
+
+    // Usuario fijo (solo vos por ahora)
+    const USER_ID = "00000000-0000-0000-0000-000000000001";
+
+    // Cliente Supabase usando la variable global window.supabase
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    function formatCurrency(num) {
+      const n = Number(num);
+      if (isNaN(n)) return "-";
+      return n.toLocaleString("es-ES", {
+        style: "currency",
+        currency: "EUR",
+      });
+    }
+
+    async function loadDashboard() {
+      const errorBox = document.getElementById("error");
+      errorBox.style.display = "none";
+      errorBox.textContent = "";
+
+      try {
+        // Cuentas
+        const { data: accounts, error: accError } = await supabase
+          .from("accounts")
+          .select("*")
+          .eq("user_id", USER_ID);
+
+        if (accError) throw accError;
+
+        // Transacciones
+        const { data: transactions, error: txError } = await supabase
+          .from("transactions")
+          .select("*")
+          .eq("user_id", USER_ID);
+
+        if (txError) throw txError;
+
+        updateCards(accounts, transactions);
+        updateAccountsTable(accounts);
+
+      } catch (err) {
+        console.error("Error cargando datos:", err);
+        errorBox.style.display = "block";
+        errorBox.textContent =
+          "Error al cargar datos desde Supabase. Abrí la consola del navegador para más detalles.";
+      }
+    }
+
+    function updateCards(accounts, transactions) {
+      const evals = accounts.filter(a => a.type === "evaluation").length;
+      const live = accounts.filter(a => a.type === "live").length;
+
+      const expenses = transactions
+        .filter(t => t.type === "expense")
+        .reduce((sum, t) => sum + Number(t.amount || 0), 0);
+
+      const withdrawals = transactions
+        .filter(t => t.type === "withdrawal")
+        .reduce((sum, t) => sum + Number(t.amount || 0), 0);
+
+      const net = withdrawals - expenses;
+
+      document.getElementById("evaluations").textContent = evals;
+      document.getElementById("liveAccounts").textContent = live;
+      document.getElementById("fundingRatio").textContent =
+        evals === 0 ? "-" : ((live / evals) * 100).toFixed(1) + "%";
+
+      document.getElementById("expenses").textContent = formatCurrency(expenses);
+      document.getElementById("withdrawals").textContent = formatCurrency(withdrawals);
+
+      const netEl = document.getElementById("netProfit");
+      const label = document.getElementById("netProfitLabel");
+      netEl.textContent = formatCurrency(net);
+
+      if (net > 0) {
+        netEl.classList.add("positive");
+        netEl.classList.remove("negative");
+        label.textContent = "BENEFICIO NETO (positivo)";
+      } else if (net < 0) {
+        netEl.classList.add("negative");
+        netEl.classList.remove("positive");
+        label.textContent = "BENEFICIO NETO (negativo)";
+      } else {
+        netEl.classList.remove("positive", "negative");
+        label.textContent = "BENEFICIO NETO";
+      }
+    }
+
+    function updateAccountsTable(accounts) {
+      const tbody = document.getElementById("accountsTableBody");
+      tbody.innerHTML = "";
+
+      if (!accounts || accounts.length === 0) {
+        const tr = document.createElement("tr");
+        const td = document.createElement("td");
+        td.colSpan = 7;
+        td.style.textAlign = "center";
+        td.style.color = "#777";
+        td.textContent = "No hay cuentas c
 
