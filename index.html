@@ -122,8 +122,8 @@
     <tbody id="accountsTableBody"></tbody>
   </table>
 
-  <!-- Supabase JS v1 estable desde CDN -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@1.35.7/dist/supabase.min.js"></script>
+  <!-- Supabase JS v1 (UMD) desde unpkg -->
+  <script src="https://unpkg.com/@supabase/supabase-js@1.35.7/dist/umd/supabase.min.js"></script>
 
   <script>
     // 🔑 DATOS DE TU PROYECTO SUPABASE
@@ -134,7 +134,8 @@
     // Usuario fijo (vos)
     const USER_ID = "00000000-0000-0000-0000-000000000001";
 
-    // 👉 CONEXIÓN A SUPABASE (v1) – ESTA ES LA CLAVE
+    // 👉 CONEXIÓN A SUPABASE (v1)
+    console.log("supabase global:", window.supabase); // debug
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     function formatCurrency(num) {
@@ -270,4 +271,3 @@
 
 </body>
 </html>
-
