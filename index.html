@@ -794,7 +794,6 @@
         tbody.appendChild(tr);
       });
 
-      // listeners acciones
       document.querySelectorAll(".action-btn.edit").forEach((btn) =>
         btn.addEventListener("click", () =>
           openEditModal(btn.getAttribute("data-id"))
@@ -1100,7 +1099,6 @@
         return;
       }
 
-      // actualizar cuenta a LIVE
       const { error: accError } = await supabaseClient
         .from("accounts")
         .update({ type: "live", status: "active" })
@@ -1111,7 +1109,6 @@
         return;
       }
 
-      // registrar gasto de activación
       const { error: txError } = await supabaseClient
         .from("transactions")
         .insert([
@@ -1182,7 +1179,6 @@
       await loadDashboard();
     };
 
-    // Cargar datos al iniciar
     loadDashboard();
   </script>
 
