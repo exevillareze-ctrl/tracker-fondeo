@@ -11,10 +11,79 @@
       background-color: #0d1117;
       color: white;
       margin: 0;
+      padding: 0;
+    }
+
+    /* ====== TOP BAR ====== */
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background-color: #111827;
+      padding: 10px 20px;
+      border-bottom: 1px solid #1f2933;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .brand-logo {
+      width: 28px;
+      height: 28px;
+      border-radius: 999px;
+      background: #8b5cf6; /* violeta */
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 14px;
+    }
+    .brand-text {
+      display: flex;
+      flex-direction: column;
+      line-height: 1.1;
+    }
+    .brand-title {
+      font-size: 14px;
+      font-weight: 700;
+    }
+    .brand-subtitle {
+      font-size: 11px;
+      color: #9ca3af;
+    }
+
+    .nav-buttons {
+      display: flex;
+      gap: 10px;
+    }
+    .nav-btn {
+      border-radius: 999px;
+      border: 1px solid #4b5563;
+      background: #111827;
+      color: #e5e7eb;
+      padding: 6px 16px;
+      cursor: pointer;
+      font-size: 12px;
+    }
+    .nav-btn-active {
+      background: #8b5cf6;
+      border-color: #8b5cf6;
+      color: white;
+    }
+
+    /* ====== PAGE LAYOUT ====== */
+    .page {
       padding: 20px;
     }
-    h1 { font-size: 28px; margin-bottom: 20px; }
-    h2 { margin-top: 30px; }
+    h1 {
+      font-size: 26px;
+      margin-bottom: 20px;
+    }
+    h2 {
+      margin-top: 30px;
+    }
+
     .card-container {
       display: flex;
       gap: 20px;
@@ -69,60 +138,87 @@
       display: none;
       font-size: 14px;
     }
+
+    /* Secciones */
+    section { margin-top: 10px; }
+    .hidden { display: none; }
   </style>
 </head>
 
 <body>
 
-  <h1>Dashboard de Cuentas de Fondeo</h1>
-
-  <div id="error"></div>
-
-  <div class="card-container">
-    <div class="card">
-      <div class="label">EVALUACIONES</div>
-      <div class="value" id="evaluations">-</div>
+  <!-- BARRA SUPERIOR -->
+  <div class="topbar">
+    <div class="brand">
+      <div class="brand-logo">T</div>
+      <div class="brand-text">
+        <div class="brand-title">TRACKER</div>
+        <div class="brand-subtitle">Tradesfera</div>
+      </div>
     </div>
-    <div class="card">
-      <div class="label">CUENTAS LIVE</div>
-      <div class="value" id="liveAccounts">-</div>
-    </div>
-    <div class="card">
-      <div class="label">FUNDING RATIO</div>
-      <div class="value" id="fundingRatio">-</div>
-    </div>
-    <div class="card">
-      <div class="label">GASTOS TOTALES</div>
-      <div class="value" id="expenses">-</div>
-    </div>
-    <div class="card">
-      <div class="label">GANANCIAS TOTALES</div>
-      <div class="value" id="withdrawals">-</div>
-    </div>
-    <div class="card">
-      <div class="label" id="netProfitLabel">BENEFICIO NETO</div>
-      <div class="value" id="netProfit">-</div>
+    <div class="nav-buttons">
+      <button class="nav-btn nav-btn-active" id="btnDashboard">Dashboard</button>
+      <button class="nav-btn" id="btnAccounts">Cuentas</button>
     </div>
   </div>
 
-  <h2>Cuentas</h2>
+  <div class="page">
+    <div id="error"></div>
 
-  <table>
-    <thead>
-      <tr>
-        <th>Nombre</th>
-        <th>Empresa</th>
-        <th>Tipo</th>
-        <th>Estado</th>
-        <th>Precio</th>
-        <th>Tamaño</th>
-        <th>Inicio</th>
-      </tr>
-    </thead>
-    <tbody id="accountsTableBody"></tbody>
-  </table>
+    <!-- SECCIÓN DASHBOARD -->
+    <section id="dashboardSection">
+      <h1>Dashboard de Cuentas de Fondeo</h1>
 
-  <!-- TODO el código JS va en un módulo ES -->
+      <div class="card-container">
+        <div class="card">
+          <div class="label">EVALUACIONES</div>
+          <div class="value" id="evaluations">-</div>
+        </div>
+        <div class="card">
+          <div class="label">CUENTAS LIVE</div>
+          <div class="value" id="liveAccounts">-</div>
+        </div>
+        <div class="card">
+          <div class="label">FUNDING RATIO</div>
+          <div class="value" id="fundingRatio">-</div>
+        </div>
+        <div class="card">
+          <div class="label">GASTOS TOTALES</div>
+          <div class="value" id="expenses">-</div>
+        </div>
+        <div class="card">
+          <div class="label">GANANCIAS TOTALES</div>
+          <div class="value" id="withdrawals">-</div>
+        </div>
+        <div class="card">
+          <div class="label" id="netProfitLabel">BENEFICIO NETO</div>
+          <div class="value" id="netProfit">-</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECCIÓN CUENTAS -->
+    <section id="accountsSection" class="hidden">
+      <h2>Cuentas</h2>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Nombre</th>
+            <th>Empresa</th>
+            <th>Tipo</th>
+            <th>Estado</th>
+            <th>Precio</th>
+            <th>Tamaño</th>
+            <th>Inicio</th>
+          </tr>
+        </thead>
+        <tbody id="accountsTableBody"></tbody>
+      </table>
+    </section>
+  </div>
+
+  <!-- JS COMO MÓDULO -->
   <script type="module">
     import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
@@ -134,16 +230,17 @@
     // Usuario fijo (vos)
     const USER_ID = "00000000-0000-0000-0000-000000000001";
 
-    // 👉 CONEXIÓN A SUPABASE (v2, sin variables globales)
+    // 👉 CONEXIÓN A SUPABASE
     const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     console.log("Supabase client creado:", supabaseClient);
 
+    /* ===== FORMATO MONEDA (USD) ===== */
     function formatCurrency(num) {
       const n = Number(num);
       if (isNaN(n)) return "-";
-      return n.toLocaleString("es-ES", {
+      return n.toLocaleString("en-US", {
         style: "currency",
-        currency: "EUR",
+        currency: "USD",   // 👈 ahora en dólares
       });
     }
 
@@ -260,7 +357,7 @@
           <td>${typeHtml}</td>
           <td>${statusHtml}</td>
           <td>${formatCurrency(acc.price)}</td>
-          <td>${acc.size ? Number(acc.size).toLocaleString("es-ES") : "-"}</td>
+          <td>${acc.size ? Number(acc.size).toLocaleString("en-US") : "-"}</td>
           <td>${acc.start_date || "-"}</td>
         `;
 
@@ -268,9 +365,30 @@
       });
     }
 
+    // ===== NAV BAR: mostrar una sección u otra =====
+    const btnDashboard = document.getElementById("btnDashboard");
+    const btnAccounts = document.getElementById("btnAccounts");
+    const dashboardSection = document.getElementById("dashboardSection");
+    const accountsSection  = document.getElementById("accountsSection");
+
+    btnDashboard.addEventListener("click", () => {
+      btnDashboard.classList.add("nav-btn-active");
+      btnAccounts.classList.remove("nav-btn-active");
+      dashboardSection.classList.remove("hidden");
+      accountsSection.classList.add("hidden");
+    });
+
+    btnAccounts.addEventListener("click", () => {
+      btnAccounts.classList.add("nav-btn-active");
+      btnDashboard.classList.remove("nav-btn-active");
+      accountsSection.classList.remove("hidden");
+      dashboardSection.classList.add("hidden");
+    });
+
     // Ejecutar al cargar la página
     loadDashboard();
   </script>
 
 </body>
 </html>
+
