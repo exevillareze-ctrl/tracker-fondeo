@@ -309,8 +309,8 @@
             </select>
           </div>
           <div class="form-row">
-            <label class="form-label" for="accStatus">Estado</label>
-            <input id="accStatus" class="form-input" placeholder="Activa, Quemada, Pausada..." />
+            <label class="form-label" for="accStatus">Estado (visual)</label>
+            <input id="accStatus" class="form-input" placeholder="activa / quemada / etc (solo visual)" />
           </div>
           <div class="form-row">
             <label class="form-label" for="accPrice">Precio (USD)</label>
@@ -600,8 +600,8 @@
           type,
           price,
           size,
-          start_date: start
-          // status NO se envía: la DB usará su valor por defecto válido
+          start_date: start,
+          status: "active"   // 👈 valor válido para tu constraint y NOT NULL
         },
       ]);
 
@@ -652,7 +652,7 @@
             user_id: USER_ID,
             type,
             amount,
-            date: today // columna date ya no queda null
+            date: today
           },
         ]);
 
@@ -678,3 +678,4 @@
 
 </body>
 </html>
+
