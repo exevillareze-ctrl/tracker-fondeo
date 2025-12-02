@@ -32,7 +32,7 @@
       width: 28px;
       height: 28px;
       border-radius: 999px;
-      background: #8b5cf6; /* violeta */
+      background: #8b5cf6;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -183,7 +183,6 @@
       <div class="brand-logo">T</div>
       <div class="brand-text">
         <div class="brand-title">TRACKER</div>
-        <!-- antes decía Tradesfera -->
         <div class="brand-subtitle">Franco Trading</div>
       </div>
     </div>
@@ -277,29 +276,27 @@
     </section>
   </div>
 
-  <!-- JS COMO MÓDULO -->
-  <script type="module">
-    import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+  <!-- SUPABASE JS (CDN) -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-    // 🔑 DATOS DE TU PROYECTO SUPABASE
+  <!-- JS PRINCIPAL -->
+  <script>
+    const { createClient } = supabase;
+
     const SUPABASE_URL = "https://zflewnplzaiarasfuzcf.supabase.co";
     const SUPABASE_ANON_KEY =
       "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpmbGV3bnBsemFpYXJhc2Z1emNmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ2MTIwMzEsImV4cCI6MjA4MDE4ODAzMX0.UgdX9H7QOKWpDLpApMYzCaA01oIxT9r2psnvJYfkcgg";
 
-    // Usuario fijo (vos)
     const USER_ID = "00000000-0000-0000-0000-000000000001";
 
-    // 👉 CONEXIÓN A SUPABASE
     const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    console.log("Supabase client creado:", supabaseClient);
 
-    /* ===== FORMATO MONEDA (USD) ===== */
     function formatCurrency(num) {
       const n = Number(num);
       if (isNaN(n)) return "-";
       return n.toLocaleString("en-US", {
         style: "currency",
-        currency: "USD",   // en dólares
+        currency: "USD",
       });
     }
 
@@ -309,7 +306,6 @@
       errorBox.textContent = "";
 
       try {
-        // Cuentas
         const { data: accounts, error: accError } = await supabaseClient
           .from("accounts")
           .select("*")
@@ -317,7 +313,6 @@
 
         if (accError) throw accError;
 
-        // Transacciones
         const { data: transactions, error: txError } = await supabaseClient
           .from("transactions")
           .select("*")
@@ -325,5 +320,139 @@
 
         if (txError) throw txError;
 
-        console
+        console.log("Accounts:", accounts);
+        console.log("Transactions:", transactions);
+
+        updateCards(accounts || [], transactions || []);
+        updateAccountsTable(accounts || []);
+
+      } catch (err) {
+        console.error("Error cargando datos:", err);
+        errorBox.style.display = "block";
+        errorBox.textContent =
+          "Error al cargar datos desde Supabase: " + (err.message || err);
+      }
+    }
+
+    function updateCards(accounts, transactions) {
+      const evals = accounts.filter(a => a.type === "evaluation").length;
+      const live = accounts.filter(a => a.type === "live").length;
+
+      const expenses = transactions
+        .filter(t => t.type === "expense")
+        .reduce((sum, t) => sum + Number(t.amount || 0), 0);
+
+      const withdrawals = transactions
+        .filter(t => t.type === "withdrawal")
+        .reduce((sum, t) => sum + Number(t.amount || 0), 0);
+
+      const net = withdrawals - expenses;
+
+      document.getElementById("evaluations").textContent = evals;
+      document.getElementById("liveAccounts").textContent = live;
+      document.getElementById("fundingRatio").textContent =
+        evals === 0 ? "-" : ((live / evals) * 100).toFixed(1) + "%";
+
+      document.getElementById("expenses").textContent = formatCurrency(expenses);
+      document.getElementById("withdrawals").textContent = formatCurrency(withdrawals);
+
+      const netEl = document.getElementById("netProfit");
+      const label = document.getElementById("netProfitLabel");
+      netEl.textContent = formatCurrency(net);
+
+      if (net > 0) {
+        netEl.classList.add("positive");
+        netEl.classList.remove("negative");
+        label.textContent = "BENEFICIO NETO (positivo)";
+      } else if (net < 0) {
+        netEl.classList.add("negative");
+        netEl.classList.remove("positive");
+        label.textContent = "BENEFICIO NETO (negativo)";
+      } else {
+        netEl.classList.remove("positive", "negative");
+        label.textContent = "BENEFICIO NETO";
+      }
+    }
+
+    function updateAccountsTable(accounts) {
+      const tbody = document.getElementById("accountsTableBody");
+      tbody.innerHTML = "";
+
+      if (!accounts || accounts.length === 0) {
+        const tr = document.createElement("tr");
+        const td = document.createElement("td");
+        td.colSpan = 7;
+        td.style.textAlign = "center";
+        td.style.color = "#777";
+        td.textContent = "No hay cuentas cargadas aún (conexión OK).";
+        tr.appendChild(td);
+        tbody.appendChild(tr);
+        return;
+      }
+
+      accounts.forEach(acc => {
+        const tr = document.createElement("tr");
+
+        const typeHtml =
+          '<span class="tag ' +
+          (acc.type === "evaluation" ? "tag-eval" : "tag-live") +
+          '">' +
+          (acc.type === "evaluation" ? "Evaluación" : "Live") +
+          "</span>";
+
+        const statusHtml =
+          '<span class="tag tag-status">' +
+          (acc.status || "-") +
+          "</span>";
+
+        tr.innerHTML = `
+          <td>${acc.name || "-"}</td>
+          <td>-</td>
+          <td>${typeHtml}</td>
+          <td>${statusHtml}</td>
+          <td>${formatCurrency(acc.price)}</td>
+          <td>${acc.size ? Number(acc.size).toLocaleString("en-US") : "-"}</td>
+          <td>${acc.start_date || "-"}</td>
+        `;
+
+        tbody.appendChild(tr);
+      });
+    }
+
+    // NAV
+    const btnDashboard = document.getElementById("btnDashboard");
+    const btnAccounts  = document.getElementById("btnAccounts");
+    const btnLogin     = document.getElementById("btnLogin");
+
+    const dashboardSection = document.getElementById("dashboardSection");
+    const accountsSection  = document.getElementById("accountsSection");
+    const loginSection     = document.getElementById("loginSection");
+
+    function setActive(tab) {
+      [btnDashboard, btnAccounts, btnLogin].forEach(b =>
+        b.classList.remove("nav-btn-active")
+      );
+      if (tab === "dashboard") btnDashboard.classList.add("nav-btn-active");
+      if (tab === "accounts")  btnAccounts.classList.add("nav-btn-active");
+      if (tab === "login")     btnLogin.classList.add("nav-btn-active");
+
+      dashboardSection.classList.add("hidden");
+      accountsSection.classList.add("hidden");
+      loginSection.classList.add("hidden");
+
+      if (tab === "dashboard") dashboardSection.classList.remove("hidden");
+      if (tab === "accounts")  accountsSection.classList.remove("hidden");
+      if (tab === "login")     loginSection.classList.remove("hidden");
+    }
+
+    btnDashboard.onclick = () => setActive("dashboard");
+    btnAccounts.onclick  = () => setActive("accounts");
+    btnLogin.onclick     = () => setActive("login");
+
+    // Cargar datos al inicio
+    loadDashboard();
+  </script>
+
+</body>
+</html>
 
