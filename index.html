@@ -134,8 +134,9 @@
     .tag-eval { background-color: #f39c12; }
     .tag-live { background-color: #2ecc71; }
     .tag-status { background-color: #3498db; }
-    .tag-expense { background-color: #e74c3c; }     /* gasto */
-    .tag-withdrawal { background-color: #2ecc71; }  /* retiro */
+    .tag-status-failed { background-color: #e74c3c; }
+    .tag-expense { background-color: #e74c3c; }
+    .tag-withdrawal { background-color: #2ecc71; }
 
     #error {
       background: #ff4444;
@@ -234,6 +235,121 @@
     }
     .form-msg-error {
       color: #ff5252;
+    }
+
+    /* ACCIONES */
+    .actions-cell {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+    .action-btn {
+      border: none;
+      border-radius: 999px;
+      padding: 4px 7px;
+      font-size: 12px;
+      cursor: pointer;
+      background: #111827;
+      color: #e5e7eb;
+    }
+    .action-btn.edit { border: 1px solid #4b5563; }
+    .action-btn.fail { border: 1px solid #e74c3c; }
+    .action-btn.activate { border: 1px solid #22c55e; }
+    .action-btn.reset { border: 1px solid #f97316; }
+
+    /* MODALES */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.65);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 50;
+    }
+    .modal {
+      background: #111827;
+      border-radius: 12px;
+      padding: 20px 22px;
+      max-width: 420px;
+      width: 100%;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+    }
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .modal-title {
+      font-size: 18px;
+      font-weight: 600;
+    }
+    .modal-close {
+      background: transparent;
+      border: none;
+      color: #9ca3af;
+      font-size: 18px;
+      cursor: pointer;
+    }
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-top: 14px;
+    }
+    .btn-secondary {
+      padding: 6px 14px;
+      border-radius: 999px;
+      border: 1px solid #4b5563;
+      background: #111827;
+      color: #e5e7eb;
+      cursor: pointer;
+      font-size: 13px;
+    }
+    .btn-primary {
+      padding: 6px 14px;
+      border-radius: 999px;
+      border: none;
+      background: #8b5cf6;
+      color: #fff;
+      cursor: pointer;
+      font-size: 13px;
+    }
+    .btn-danger {
+      padding: 6px 14px;
+      border-radius: 999px;
+      border: none;
+      background: #e74c3c;
+      color: #fff;
+      cursor: pointer;
+      font-size: 13px;
+    }
+    .btn-success {
+      padding: 6px 14px;
+      border-radius: 999px;
+      border: none;
+      background: #22c55e;
+      color: #fff;
+      cursor: pointer;
+      font-size: 13px;
+    }
+    .btn-warning {
+      padding: 6px 14px;
+      border-radius: 999px;
+      border: none;
+      background: #f97316;
+      color: #fff;
+      cursor: pointer;
+      font-size: 13px;
+    }
+    .modal-danger-box {
+      margin-top: 10px;
+      padding: 10px;
+      border-radius: 8px;
+      background: #2b0f10;
+      border: 1px solid #e74c3c;
+      font-size: 13px;
     }
   </style>
 </head>
@@ -364,6 +480,7 @@
             <th>Precio</th>
             <th>Tamaño</th>
             <th>Inicio</th>
+            <th>Acciones</th>
           </tr>
         </thead>
         <tbody id="accountsTableBody"></tbody>
@@ -411,6 +528,102 @@
     </section>
   </div>
 
+  <!-- MODALES -->
+
+  <!-- Editar cuenta -->
+  <div id="modalEdit" class="modal-backdrop hidden">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">Editar Cuenta</div>
+        <button class="modal-close" data-close-edit>&times;</button>
+      </div>
+      <div class="form-row">
+        <label class="form-label" for="editName">Nombre de la cuenta</label>
+        <input id="editName" class="form-input" />
+      </div>
+
+      <div class="modal-danger-box">
+        <strong>Zona de peligro</strong><br />
+        Eliminará la cuenta de forma permanente.
+        <div class="modal-footer" style="justify-content:flex-start; margin-top:8px;">
+          <button class="btn-danger" id="btnDeleteAccount">Eliminar Cuenta Permanentemente</button>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-secondary" data-close-edit>Cancelar</button>
+        <button class="btn-primary" id="btnSaveEdit">Guardar Cambios</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Fallar evaluación -->
+  <div id="modalFail" class="modal-backdrop hidden">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">Fallar Evaluación</div>
+        <button class="modal-close" data-close-fail>&times;</button>
+      </div>
+      <p id="failText" style="font-size:14px; margin-top:4px;"></p>
+      <div class="modal-footer">
+        <button class="btn-secondary" data-close-fail>Cancelar</button>
+        <button class="btn-danger" id="btnConfirmFail">Fallar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Activar cuenta -->
+  <div id="modalActivate" class="modal-backdrop hidden">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">Activar Cuenta</div>
+        <button class="modal-close" data-close-activate>&times;</button>
+      </div>
+      <div class="form-row">
+        <label class="form-label" for="activateName">Nombre</label>
+        <input id="activateName" class="form-input" disabled />
+      </div>
+      <div class="form-row">
+        <label class="form-label" for="activateFee">Tarifa de Activación (USD)</label>
+        <input id="activateFee" type="number" step="0.01" class="form-input" />
+      </div>
+      <div class="form-row">
+        <label class="form-label" for="activateDate">Fecha</label>
+        <input id="activateDate" type="date" class="form-input" />
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" data-close-activate>Cancelar</button>
+        <button class="btn-success" id="btnConfirmActivate">Activar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Resetear cuenta -->
+  <div id="modalReset" class="modal-backdrop hidden">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">Resetear Cuenta</div>
+        <button class="modal-close" data-close-reset>&times;</button>
+      </div>
+      <div class="form-row">
+        <label class="form-label" for="resetName">Nombre</label>
+        <input id="resetName" class="form-input" disabled />
+      </div>
+      <div class="form-row">
+        <label class="form-label" for="resetPrice">Precio del Reset (USD)</label>
+        <input id="resetPrice" type="number" step="0.01" class="form-input" />
+      </div>
+      <div class="form-row">
+        <label class="form-label" for="resetDate">Fecha</label>
+        <input id="resetDate" type="date" class="form-input" />
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" data-close-reset>Cancelar</button>
+        <button class="btn-warning" id="btnConfirmReset">Resetear</button>
+      </div>
+    </div>
+  </div>
+
   <!-- SUPABASE JS (CDN) -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
@@ -425,6 +638,9 @@
     const USER_ID = "00000000-0000-0000-0000-000000000001";
 
     const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    let cachedAccounts = [];
+    let selectedAccountId = null;
 
     function formatCurrency(num) {
       const n = Number(num);
@@ -479,8 +695,9 @@
         return;
       }
 
-      updateCards(accounts || [], transactions || []);
-      updateAccountsTable(accounts || []);
+      cachedAccounts = accounts || [];
+      updateCards(cachedAccounts, transactions || []);
+      updateAccountsTable(cachedAccounts);
       updateTxTable(transactions || []);
     }
 
@@ -533,7 +750,7 @@
       if (!accounts || accounts.length === 0) {
         const tr = document.createElement("tr");
         const td = document.createElement("td");
-        td.colSpan = 7;
+        td.colSpan = 8;
         td.style.textAlign = "center";
         td.style.color = "#777";
         td.textContent = "No hay cuentas cargadas aún (conexión OK).";
@@ -552,8 +769,11 @@
           (acc.type === "evaluation" ? "Evaluación" : "Live") +
           "</span>";
 
+        let statusClass = "tag-status";
+        if (acc.status === "failed") statusClass = "tag-status-failed";
+
         const statusHtml =
-          '<span class="tag tag-status">' + (acc.status || "-") + "</span>";
+          '<span class="tag ' + statusClass + '">' + (acc.status || "-") + "</span>";
 
         tr.innerHTML = `
           <td>${acc.name || "-"}</td>
@@ -563,10 +783,38 @@
           <td>${formatCurrency(acc.price)}</td>
           <td>${acc.size ? Number(acc.size).toLocaleString("en-US") : "-"}</td>
           <td>${acc.start_date || "-"}</td>
+          <td class="actions-cell">
+            <button class="action-btn edit" data-id="${acc.id}" title="Editar">&#9998;</button>
+            <button class="action-btn fail" data-id="${acc.id}" title="Fallar">&#10006;</button>
+            <button class="action-btn activate" data-id="${acc.id}" title="Activar">&#10003;</button>
+            <button class="action-btn reset" data-id="${acc.id}" title="Resetear">&#10227;</button>
+          </td>
         `;
 
         tbody.appendChild(tr);
       });
+
+      // listeners acciones
+      document.querySelectorAll(".action-btn.edit").forEach((btn) =>
+        btn.addEventListener("click", () =>
+          openEditModal(btn.getAttribute("data-id"))
+        )
+      );
+      document.querySelectorAll(".action-btn.fail").forEach((btn) =>
+        btn.addEventListener("click", () =>
+          openFailModal(btn.getAttribute("data-id"))
+        )
+      );
+      document.querySelectorAll(".action-btn.activate").forEach((btn) =>
+        btn.addEventListener("click", () =>
+          openActivateModal(btn.getAttribute("data-id"))
+        )
+      );
+      document.querySelectorAll(".action-btn.reset").forEach((btn) =>
+        btn.addEventListener("click", () =>
+          openResetModal(btn.getAttribute("data-id"))
+        )
+      );
     }
 
     function updateTxTable(transactions) {
@@ -599,6 +847,10 @@
 
         tbody.appendChild(tr);
       });
+    }
+
+    function getAccountById(id) {
+      return cachedAccounts.find((a) => String(a.id) === String(id));
     }
 
     // NAV
@@ -733,6 +985,204 @@
       await loadDashboard();
     };
 
+    /* ==== MODALES: EDITAR ==== */
+
+    const modalEdit = document.getElementById("modalEdit");
+    const editNameInput = document.getElementById("editName");
+    document.querySelectorAll("[data-close-edit]").forEach((btn) =>
+      btn.addEventListener("click", () => modalEdit.classList.add("hidden"))
+    );
+
+    function openEditModal(id) {
+      const acc = getAccountById(id);
+      if (!acc) return;
+      selectedAccountId = acc.id;
+      editNameInput.value = acc.name || "";
+      modalEdit.classList.remove("hidden");
+    }
+
+    document.getElementById("btnSaveEdit").onclick = async () => {
+      const newName = editNameInput.value.trim();
+      if (!newName) return;
+
+      const { error } = await supabaseClient
+        .from("accounts")
+        .update({ name: newName })
+        .eq("id", selectedAccountId);
+
+      if (error) {
+        alert("Error al editar la cuenta: " + (error.message || JSON.stringify(error)));
+        return;
+      }
+
+      modalEdit.classList.add("hidden");
+      await loadDashboard();
+    };
+
+    document.getElementById("btnDeleteAccount").onclick = async () => {
+      if (!confirm("¿Seguro que querés eliminar esta cuenta permanentemente?")) return;
+
+      const { error } = await supabaseClient
+        .from("accounts")
+        .delete()
+        .eq("id", selectedAccountId);
+
+      if (error) {
+        alert("Error al eliminar la cuenta: " + (error.message || JSON.stringify(error)));
+        return;
+      }
+
+      modalEdit.classList.add("hidden");
+      await loadDashboard();
+    };
+
+    /* ==== MODAL: FALLAR EVALUACIÓN ==== */
+
+    const modalFail = document.getElementById("modalFail");
+    const failText = document.getElementById("failText");
+
+    document.querySelectorAll("[data-close-fail]").forEach((btn) =>
+      btn.addEventListener("click", () => modalFail.classList.add("hidden"))
+    );
+
+    function openFailModal(id) {
+      const acc = getAccountById(id);
+      if (!acc) return;
+      selectedAccountId = acc.id;
+      failText.textContent =
+        `¿Estás seguro de marcar la cuenta "${acc.name}" como fallada?`;
+      modalFail.classList.remove("hidden");
+    }
+
+    document.getElementById("btnConfirmFail").onclick = async () => {
+      const { error } = await supabaseClient
+        .from("accounts")
+        .update({ status: "failed" })
+        .eq("id", selectedAccountId);
+
+      if (error) {
+        alert("Error al fallar la cuenta: " + (error.message || JSON.stringify(error)));
+        return;
+      }
+
+      modalFail.classList.add("hidden");
+      await loadDashboard();
+    };
+
+    /* ==== MODAL: ACTIVAR ==== */
+
+    const modalActivate = document.getElementById("modalActivate");
+    const activateNameInput = document.getElementById("activateName");
+    const activateFeeInput = document.getElementById("activateFee");
+    const activateDateInput = document.getElementById("activateDate");
+
+    document.querySelectorAll("[data-close-activate]").forEach((btn) =>
+      btn.addEventListener("click", () => modalActivate.classList.add("hidden"))
+    );
+
+    function openActivateModal(id) {
+      const acc = getAccountById(id);
+      if (!acc) return;
+      selectedAccountId = acc.id;
+      activateNameInput.value = acc.name || "";
+      activateFeeInput.value = "";
+      const today = new Date().toISOString().slice(0,10);
+      activateDateInput.value = today;
+      modalActivate.classList.remove("hidden");
+    }
+
+    document.getElementById("btnConfirmActivate").onclick = async () => {
+      const fee = parseFloat(activateFeeInput.value || "0");
+      const date = activateDateInput.value || new Date().toISOString().slice(0,10);
+
+      if (!fee || fee <= 0) {
+        alert("Ingresá un monto de activación válido.");
+        return;
+      }
+
+      // actualizar cuenta a LIVE
+      const { error: accError } = await supabaseClient
+        .from("accounts")
+        .update({ type: "live", status: "active" })
+        .eq("id", selectedAccountId);
+
+      if (accError) {
+        alert("Error al activar la cuenta: " + (accError.message || JSON.stringify(accError)));
+        return;
+      }
+
+      // registrar gasto de activación
+      const { error: txError } = await supabaseClient
+        .from("transactions")
+        .insert([
+          {
+            user_id: USER_ID,
+            type: "expense",
+            amount: fee,
+            date
+          }
+        ]);
+
+      if (txError) {
+        alert("Cuenta activada, pero error al registrar el gasto: " + (txError.message || JSON.stringify(txError)));
+      }
+
+      modalActivate.classList.add("hidden");
+      await loadDashboard();
+    };
+
+    /* ==== MODAL: RESETEAR ==== */
+
+    const modalReset = document.getElementById("modalReset");
+    const resetNameInput = document.getElementById("resetName");
+    const resetPriceInput = document.getElementById("resetPrice");
+    const resetDateInput = document.getElementById("resetDate");
+
+    document.querySelectorAll("[data-close-reset]").forEach((btn) =>
+      btn.addEventListener("click", () => modalReset.classList.add("hidden"))
+    );
+
+    function openResetModal(id) {
+      const acc = getAccountById(id);
+      if (!acc) return;
+      selectedAccountId = acc.id;
+      resetNameInput.value = acc.name || "";
+      resetPriceInput.value = "";
+      const today = new Date().toISOString().slice(0,10);
+      resetDateInput.value = today;
+      modalReset.classList.remove("hidden");
+    }
+
+    document.getElementById("btnConfirmReset").onclick = async () => {
+      const price = parseFloat(resetPriceInput.value || "0");
+      const date = resetDateInput.value || new Date().toISOString().slice(0,10);
+
+      if (!price || price <= 0) {
+        alert("Ingresá un precio de reset válido.");
+        return;
+      }
+
+      const { error } = await supabaseClient
+        .from("transactions")
+        .insert([
+          {
+            user_id: USER_ID,
+            type: "expense",
+            amount: price,
+            date
+          }
+        ]);
+
+      if (error) {
+        alert("Error al registrar el reset: " + (error.message || JSON.stringify(error)));
+        return;
+      }
+
+      modalReset.classList.add("hidden");
+      await loadDashboard();
+    };
+
+    // Cargar datos al iniciar
     loadDashboard();
   </script>
 
