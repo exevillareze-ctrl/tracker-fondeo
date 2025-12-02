@@ -148,7 +148,7 @@
     }
 
     section { margin-top: 10px; }
-    .hidden { display: none; }
+    .hidden { display: none; }  /* SOLO para secciones, NO para los modales */
 
     /* LOGIN */
     .login-box {
@@ -262,10 +262,13 @@
       position: fixed;
       inset: 0;
       background: rgba(0,0,0,0.65);
-      display: flex;
+      display: none;              /* POR DEFECTO OCULTO */
       align-items: center;
       justify-content: center;
       z-index: 50;
+    }
+    .modal-backdrop.active {       /* SOLO SE VE CUANDO TIENE .active */
+      display: flex;
     }
     .modal {
       background: #111827;
@@ -528,10 +531,10 @@
     </section>
   </div>
 
-  <!-- MODALES -->
+  <!-- MODALES: SIEMPRE OCULTOS HASTA QUE JS LES PONGA .active -->
 
   <!-- Editar cuenta -->
-  <div id="modalEdit" class="modal-backdrop hidden">
+  <div id="modalEdit" class="modal-backdrop">
     <div class="modal">
       <div class="modal-header">
         <div class="modal-title">Editar Cuenta</div>
@@ -558,7 +561,7 @@
   </div>
 
   <!-- Fallar evaluación -->
-  <div id="modalFail" class="modal-backdrop hidden">
+  <div id="modalFail" class="modal-backdrop">
     <div class="modal">
       <div class="modal-header">
         <div class="modal-title">Fallar Evaluación</div>
@@ -573,7 +576,7 @@
   </div>
 
   <!-- Activar cuenta -->
-  <div id="modalActivate" class="modal-backdrop hidden">
+  <div id="modalActivate" class="modal-backdrop">
     <div class="modal">
       <div class="modal-header">
         <div class="modal-title">Activar Cuenta</div>
@@ -599,7 +602,7 @@
   </div>
 
   <!-- Resetear cuenta -->
-  <div id="modalReset" class="modal-backdrop hidden">
+  <div id="modalReset" class="modal-backdrop">
     <div class="modal">
       <div class="modal-header">
         <div class="modal-title">Resetear Cuenta</div>
@@ -988,8 +991,9 @@
 
     const modalEdit = document.getElementById("modalEdit");
     const editNameInput = document.getElementById("editName");
+
     document.querySelectorAll("[data-close-edit]").forEach((btn) =>
-      btn.addEventListener("click", () => modalEdit.classList.add("hidden"))
+      btn.addEventListener("click", () => modalEdit.classList.remove("active"))
     );
 
     function openEditModal(id) {
@@ -997,7 +1001,7 @@
       if (!acc) return;
       selectedAccountId = acc.id;
       editNameInput.value = acc.name || "";
-      modalEdit.classList.remove("hidden");
+      modalEdit.classList.add("active");
     }
 
     document.getElementById("btnSaveEdit").onclick = async () => {
@@ -1014,7 +1018,7 @@
         return;
       }
 
-      modalEdit.classList.add("hidden");
+      modalEdit.classList.remove("active");
       await loadDashboard();
     };
 
@@ -1031,7 +1035,7 @@
         return;
       }
 
-      modalEdit.classList.add("hidden");
+      modalEdit.classList.remove("active");
       await loadDashboard();
     };
 
@@ -1041,7 +1045,7 @@
     const failText = document.getElementById("failText");
 
     document.querySelectorAll("[data-close-fail]").forEach((btn) =>
-      btn.addEventListener("click", () => modalFail.classList.add("hidden"))
+      btn.addEventListener("click", () => modalFail.classList.remove("active"))
     );
 
     function openFailModal(id) {
@@ -1050,7 +1054,7 @@
       selectedAccountId = acc.id;
       failText.textContent =
         `¿Estás seguro de marcar la cuenta "${acc.name}" como fallada?`;
-      modalFail.classList.remove("hidden");
+      modalFail.classList.add("active");
     }
 
     document.getElementById("btnConfirmFail").onclick = async () => {
@@ -1064,7 +1068,7 @@
         return;
       }
 
-      modalFail.classList.add("hidden");
+      modalFail.classList.remove("active");
       await loadDashboard();
     };
 
@@ -1076,7 +1080,7 @@
     const activateDateInput = document.getElementById("activateDate");
 
     document.querySelectorAll("[data-close-activate]").forEach((btn) =>
-      btn.addEventListener("click", () => modalActivate.classList.add("hidden"))
+      btn.addEventListener("click", () => modalActivate.classList.remove("active"))
     );
 
     function openActivateModal(id) {
@@ -1087,7 +1091,7 @@
       activateFeeInput.value = "";
       const today = new Date().toISOString().slice(0,10);
       activateDateInput.value = today;
-      modalActivate.classList.remove("hidden");
+      modalActivate.classList.add("active");
     }
 
     document.getElementById("btnConfirmActivate").onclick = async () => {
@@ -1124,7 +1128,7 @@
         alert("Cuenta activada, pero error al registrar el gasto: " + (txError.message || JSON.stringify(txError)));
       }
 
-      modalActivate.classList.add("hidden");
+      modalActivate.classList.remove("active");
       await loadDashboard();
     };
 
@@ -1136,7 +1140,7 @@
     const resetDateInput = document.getElementById("resetDate");
 
     document.querySelectorAll("[data-close-reset]").forEach((btn) =>
-      btn.addEventListener("click", () => modalReset.classList.add("hidden"))
+      btn.addEventListener("click", () => modalReset.classList.remove("active"))
     );
 
     function openResetModal(id) {
@@ -1147,7 +1151,7 @@
       resetPriceInput.value = "";
       const today = new Date().toISOString().slice(0,10);
       resetDateInput.value = today;
-      modalReset.classList.remove("hidden");
+      modalReset.classList.add("active");
     }
 
     document.getElementById("btnConfirmReset").onclick = async () => {
@@ -1175,7 +1179,7 @@
         return;
       }
 
-      modalReset.classList.add("hidden");
+      modalReset.classList.remove("active");
       await loadDashboard();
     };
 
