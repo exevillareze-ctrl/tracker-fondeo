@@ -427,42 +427,48 @@
       errorBox.style.display = "none";
       errorBox.textContent = "";
 
-      try {
-        const { data: accounts, error: accError } = await supabaseClient
-          .from("accounts")
-          .select("*")
-          .eq("user_id", USER_ID);
+      const { data: accounts, error: accError } = await supabaseClient
+        .from("accounts")
+        .select("*")
+        .eq("user_id", USER_ID);
 
-        if (accError) throw accError;
-
-        const { data: transactions, error: txError } = await supabaseClient
-          .from("transactions")
-          .select("*")
-          .eq("user_id", USER_ID);
-
-        if (txError) throw txError;
-
-        updateCards(accounts || [], transactions || []);
-        updateAccountsTable(accounts || []);
-
-      } catch (err) {
-        console.error("Error cargando datos:", err);
+      if (accError) {
+        console.error("Error accounts:", accError);
         errorBox.style.display = "block";
         errorBox.textContent =
-          "Error al cargar datos desde Supabase: " + (err.message || err);
+          "Error al leer cuentas: " +
+          (accError.message || JSON.stringify(accError));
+        return;
       }
+
+      const { data: transactions, error: txError } = await supabaseClient
+        .from("transactions")
+        .select("*")
+        .eq("user_id", USER_ID);
+
+      if (txError) {
+        console.error("Error transactions:", txError);
+        errorBox.style.display = "block";
+        errorBox.textContent =
+          "Error al leer movimientos: " +
+          (txError.message || JSON.stringify(txError));
+        return;
+      }
+
+      updateCards(accounts || [], transactions || []);
+      updateAccountsTable(accounts || []);
     }
 
     function updateCards(accounts, transactions) {
-      const evals = accounts.filter(a => a.type === "evaluation").length;
-      const live = accounts.filter(a => a.type === "live").length;
+      const evals = accounts.filter((a) => a.type === "evaluation").length;
+      const live = accounts.filter((a) => a.type === "live").length;
 
       const expenses = transactions
-        .filter(t => t.type === "expense")
+        .filter((t) => t.type === "expense")
         .reduce((sum, t) => sum + Number(t.amount || 0), 0);
 
       const withdrawals = transactions
-        .filter(t => t.type === "withdrawal")
+        .filter((t) => t.type === "withdrawal")
         .reduce((sum, t) => sum + Number(t.amount || 0), 0);
 
       const net = withdrawals - expenses;
@@ -472,8 +478,10 @@
       document.getElementById("fundingRatio").textContent =
         evals === 0 ? "-" : ((live / evals) * 100).toFixed(1) + "%";
 
-      document.getElementById("expenses").textContent = formatCurrency(expenses);
-      document.getElementById("withdrawals").textContent = formatCurrency(withdrawals);
+      document.getElementById("expenses").textContent =
+        formatCurrency(expenses);
+      document.getElementById("withdrawals").textContent =
+        formatCurrency(withdrawals);
 
       const netEl = document.getElementById("netProfit");
       const label = document.getElementById("netProfitLabel");
@@ -509,7 +517,7 @@
         return;
       }
 
-      accounts.forEach(acc => {
+      accounts.forEach((acc) => {
         const tr = document.createElement("tr");
 
         const typeHtml =
@@ -520,9 +528,7 @@
           "</span>";
 
         const statusHtml =
-          '<span class="tag tag-status">' +
-          (acc.status || "-") +
-          "</span>";
+          '<span class="tag tag-status">' + (acc.status || "-") + "</span>";
 
         tr.innerHTML = `
           <td>${acc.name || "-"}</td>
@@ -530,7 +536,9 @@
           <td>${typeHtml}</td>
           <td>${statusHtml}</td>
           <td>${formatCurrency(acc.price)}</td>
-          <td>${acc.size ? Number(acc.size).toLocaleString("en-US") : "-"}</td>
+          <td>${
+            acc.size ? Number(acc.size).toLocaleString("en-US") : "-"
+          }</td>
           <td>${acc.start_date || "-"}</td>
         `;
 
@@ -548,7 +556,7 @@
     const loginSection     = document.getElementById("loginSection");
 
     function setActive(tab) {
-      [btnDashboard, btnAccounts, btnLogin].forEach(b =>
+      [btnDashboard, btnAccounts, btnLogin].forEach((b) =>
         b.classList.remove("nav-btn-active")
       );
       if (tab === "dashboard") btnDashboard.classList.add("nav-btn-active");
@@ -579,11 +587,14 @@
       const name   = document.getElementById("accName").value.trim();
       const type   = document.getElementById("accType").value;
       const status = document.getElementById("accStatus").value.trim();
-      const price  = parseFloat(document.getElementById("accPrice").value || "0");
+      const price  = parseFloat(
+        document.getElementById("accPrice").value || "0"
+      );
       const size   = document.getElementById("accSize").value
         ? parseFloat(document.getElementById("accSize").value)
         : null;
-      const start  = document.getElementById("accStart").value || null;
+      const start  =
+        document.getElementById("accStart").value || null;
 
       if (!name) {
         accountMsg.textContent = "El nombre de la cuenta es obligatorio.";
@@ -591,8 +602,8 @@
         return;
       }
 
-      try {
-        const { error } = await supabaseClient.from("accounts").insert([{
+      const { error } = await supabaseClient.from("accounts").insert([
+        {
           user_id: USER_ID,
           name,
           type,
@@ -600,25 +611,28 @@
           price,
           size,
           start_date: start,
-        }]);
+        },
+      ]);
 
-        if (error) throw error;
-
-        accountMsg.textContent = "Cuenta guardada correctamente.";
-        accountMsg.classList.add("form-msg-ok");
-
-        document.getElementById("accName").value = "";
-        document.getElementById("accStatus").value = "";
-        document.getElementById("accPrice").value = "";
-        document.getElementById("accSize").value = "";
-        document.getElementById("accStart").value = "";
-
-        await loadDashboard();
-      } catch (err) {
-        console.error("Error guardando cuenta:", err);
-        accountMsg.textContent = "Error al guardar la cuenta.";
+      if (error) {
+        console.error("Error guardando cuenta:", error);
+        accountMsg.textContent =
+          "Error al guardar la cuenta: " +
+          (error.message || JSON.stringify(error));
         accountMsg.classList.add("form-msg-error");
+        return;
       }
+
+      accountMsg.textContent = "Cuenta guardada correctamente.";
+      accountMsg.classList.add("form-msg-ok");
+
+      document.getElementById("accName").value = "";
+      document.getElementById("accStatus").value = "";
+      document.getElementById("accPrice").value = "";
+      document.getElementById("accSize").value = "";
+      document.getElementById("accStart").value = "";
+
+      await loadDashboard();
     };
 
     // ==== FORM: GUARDAR MOVIMIENTO ====
@@ -630,7 +644,9 @@
       txMsg.className = "form-msg";
 
       const type   = document.getElementById("txType").value;
-      const amount = parseFloat(document.getElementById("txAmount").value || "0");
+      const amount = parseFloat(
+        document.getElementById("txAmount").value || "0"
+      );
 
       if (!amount || amount <= 0) {
         txMsg.textContent = "Ingresá un monto válido.";
@@ -638,26 +654,31 @@
         return;
       }
 
-      try {
-        const { error } = await supabaseClient.from("transactions").insert([{
-          user_id: USER_ID,
-          type,
-          amount,
-        }]);
+      const { error } = await supabaseClient
+        .from("transactions")
+        .insert([
+          {
+            user_id: USER_ID,
+            type,
+            amount,
+          },
+        ]);
 
-        if (error) throw error;
-
-        txMsg.textContent = "Movimiento guardado correctamente.";
-        txMsg.classList.add("form-msg-ok");
-
-        document.getElementById("txAmount").value = "";
-
-        await loadDashboard();
-      } catch (err) {
-        console.error("Error guardando movimiento:", err);
-        txMsg.textContent = "Error al guardar el movimiento.";
+      if (error) {
+        console.error("Error guardando movimiento:", error);
+        txMsg.textContent =
+          "Error al guardar el movimiento: " +
+          (error.message || JSON.stringify(error));
         txMsg.classList.add("form-msg-error");
+        return;
       }
+
+      txMsg.textContent = "Movimiento guardado correctamente.";
+      txMsg.classList.add("form-msg-ok");
+
+      document.getElementById("txAmount").value = "";
+
+      await loadDashboard();
     };
 
     // Cargar datos al inicio
@@ -666,4 +687,3 @@
 
 </body>
 </html>
-
