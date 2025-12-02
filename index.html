@@ -10,17 +10,13 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body className="bg-[#0f0f0f] text-white">
-        
         <header className="w-full h-16 border-b border-neutral-800 flex items-center px-6">
-          
           {/* Izquierda: Tracker + Franco Trading */}
           <div className="flex flex-col leading-tight">
             <span className="text-lg font-semibold tracking-wide uppercase">
               Tracker
             </span>
-            <span className="text-xs text-gray-400">
-              Franco Trading
-            </span>
+            <span className="text-xs text-gray-400">Franco Trading</span>
           </div>
 
           {/* Centro: navegación */}
@@ -28,27 +24,20 @@ export default function RootLayout({ children }) {
             <Link href="/" className="hover:text-gray-300 transition">
               Dashboard
             </Link>
-
             <Link href="/cuentas" className="hover:text-gray-300 transition">
               Cuentas
             </Link>
-
             <Link href="/login" className="hover:text-gray-300 transition">
               Login
             </Link>
           </nav>
 
           {/* Derecha: símbolo dólar */}
-          <div className="text-xl font-semibold">
-            $
-          </div>
-
+          <div className="text-xl font-semibold">$</div>
         </header>
 
         <main>{children}</main>
-
       </body>
     </html>
   );
 }
-
