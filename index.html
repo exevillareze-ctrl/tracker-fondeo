@@ -134,6 +134,8 @@
     .tag-eval { background-color: #f39c12; }
     .tag-live { background-color: #2ecc71; }
     .tag-status { background-color: #3498db; }
+    .tag-expense { background-color: #e74c3c; }     /* gasto */
+    .tag-withdrawal { background-color: #2ecc71; }  /* retiro */
 
     #error {
       background: #ff4444;
@@ -351,6 +353,7 @@
         </div>
       </div>
 
+      <!-- Tabla de cuentas -->
       <table>
         <thead>
           <tr>
@@ -364,6 +367,19 @@
           </tr>
         </thead>
         <tbody id="accountsTableBody"></tbody>
+      </table>
+
+      <!-- Tabla de movimientos -->
+      <h2>Movimientos</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Fecha</th>
+            <th>Tipo</th>
+            <th>Monto</th>
+          </tr>
+        </thead>
+        <tbody id="txTableBody"></tbody>
       </table>
     </section>
 
@@ -419,6 +435,16 @@
       });
     }
 
+    function formatDate(iso) {
+      if (!iso) return "-";
+      const d = new Date(iso);
+      if (isNaN(d.getTime())) return iso;
+      const day = String(d.getDate()).padStart(2, "0");
+      const month = String(d.getMonth() + 1).padStart(2, "0");
+      const year = d.getFullYear();
+      return `${day}/${month}/${year}`;
+    }
+
     async function loadDashboard() {
       const errorBox = document.getElementById("error");
       errorBox.style.display = "none";
@@ -441,7 +467,8 @@
       const { data: transactions, error: txError } = await supabaseClient
         .from("transactions")
         .select("*")
-        .eq("user_id", USER_ID);
+        .eq("user_id", USER_ID)
+        .order("date", { ascending: false });
 
       if (txError) {
         console.error("Error transactions:", txError);
@@ -454,6 +481,7 @@
 
       updateCards(accounts || [], transactions || []);
       updateAccountsTable(accounts || []);
+      updateTxTable(transactions || []);
     }
 
     function updateCards(accounts, transactions) {
@@ -541,6 +569,38 @@
       });
     }
 
+    function updateTxTable(transactions) {
+      const tbody = document.getElementById("txTableBody");
+      tbody.innerHTML = "";
+
+      if (!transactions || transactions.length === 0) {
+        const tr = document.createElement("tr");
+        const td = document.createElement("td");
+        td.colSpan = 3;
+        td.style.textAlign = "center";
+        td.style.color = "#777";
+        td.textContent = "No hay movimientos registrados.";
+        tr.appendChild(td);
+        tbody.appendChild(tr);
+        return;
+      }
+
+      transactions.forEach((tx) => {
+        const tr = document.createElement("tr");
+
+        const typeLabel = tx.type === "expense" ? "Gasto" : "Retiro";
+        const typeClass = tx.type === "expense" ? "tag-expense" : "tag-withdrawal";
+
+        tr.innerHTML = `
+          <td>${formatDate(tx.date)}</td>
+          <td><span class="tag ${typeClass}">${typeLabel}</span></td>
+          <td>${formatCurrency(tx.amount)}</td>
+        `;
+
+        tbody.appendChild(tr);
+      });
+    }
+
     // NAV
     const btnDashboard = document.getElementById("btnDashboard");
     const btnAccounts  = document.getElementById("btnAccounts");
@@ -601,7 +661,7 @@
           price,
           size,
           start_date: start,
-          status: "active"   // 👈 valor válido para tu constraint y NOT NULL
+          status: "active"
         },
       ]);
 
