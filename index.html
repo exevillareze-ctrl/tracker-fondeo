@@ -144,7 +144,6 @@
       font-size: 14px;
     }
 
-    /* Secciones */
     section { margin-top: 10px; }
     .hidden { display: none; }
 
@@ -294,7 +293,6 @@
     <section id="accountsSection" class="hidden">
       <h2>Cuentas</h2>
 
-      <!-- Formularios -->
       <div class="form-grid">
         <!-- Alta cuenta -->
         <div class="form-box">
@@ -353,7 +351,6 @@
         </div>
       </div>
 
-      <!-- Tabla de cuentas -->
       <table>
         <thead>
           <tr>
@@ -536,9 +533,7 @@
           <td>${typeHtml}</td>
           <td>${statusHtml}</td>
           <td>${formatCurrency(acc.price)}</td>
-          <td>${
-            acc.size ? Number(acc.size).toLocaleString("en-US") : "-"
-          }</td>
+          <td>${acc.size ? Number(acc.size).toLocaleString("en-US") : "-"}</td>
           <td>${acc.start_date || "-"}</td>
         `;
 
@@ -546,7 +541,7 @@
       });
     }
 
-    // ==== NAV ====
+    // NAV
     const btnDashboard = document.getElementById("btnDashboard");
     const btnAccounts  = document.getElementById("btnAccounts");
     const btnLogin     = document.getElementById("btnLogin");
@@ -576,7 +571,7 @@
     btnAccounts.onclick  = () => setActive("accounts");
     btnLogin.onclick     = () => setActive("login");
 
-    // ==== FORM: GUARDAR CUENTA ====
+    // GUARDAR CUENTA
     const saveAccountBtn = document.getElementById("saveAccountBtn");
     const accountMsg     = document.getElementById("accountMsg");
 
@@ -586,15 +581,11 @@
 
       const name   = document.getElementById("accName").value.trim();
       const type   = document.getElementById("accType").value;
-      const status = document.getElementById("accStatus").value.trim();
-      const price  = parseFloat(
-        document.getElementById("accPrice").value || "0"
-      );
+      const price  = parseFloat(document.getElementById("accPrice").value || "0");
       const size   = document.getElementById("accSize").value
         ? parseFloat(document.getElementById("accSize").value)
         : null;
-      const start  =
-        document.getElementById("accStart").value || null;
+      const start  = document.getElementById("accStart").value || null;
 
       if (!name) {
         accountMsg.textContent = "El nombre de la cuenta es obligatorio.";
@@ -607,10 +598,10 @@
           user_id: USER_ID,
           name,
           type,
-          status,
           price,
           size,
-          start_date: start,
+          start_date: start
+          // status NO se envía: la DB usará su valor por defecto válido
         },
       ]);
 
@@ -635,7 +626,7 @@
       await loadDashboard();
     };
 
-    // ==== FORM: GUARDAR MOVIMIENTO ====
+    // GUARDAR MOVIMIENTO
     const saveTxBtn = document.getElementById("saveTxBtn");
     const txMsg     = document.getElementById("txMsg");
 
@@ -644,15 +635,15 @@
       txMsg.className = "form-msg";
 
       const type   = document.getElementById("txType").value;
-      const amount = parseFloat(
-        document.getElementById("txAmount").value || "0"
-      );
+      const amount = parseFloat(document.getElementById("txAmount").value || "0");
 
       if (!amount || amount <= 0) {
         txMsg.textContent = "Ingresá un monto válido.";
         txMsg.classList.add("form-msg-error");
         return;
       }
+
+      const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
 
       const { error } = await supabaseClient
         .from("transactions")
@@ -661,6 +652,7 @@
             user_id: USER_ID,
             type,
             amount,
+            date: today // columna date ya no queda null
           },
         ]);
 
@@ -681,7 +673,6 @@
       await loadDashboard();
     };
 
-    // Cargar datos al inicio
     loadDashboard();
   </script>
 
