@@ -82,6 +82,11 @@
     }
     h2 {
       margin-top: 30px;
+      margin-bottom: 15px;
+    }
+    h3 {
+      margin: 0 0 10px 0;
+      font-size: 16px;
     }
 
     .card-container {
@@ -172,6 +177,63 @@
       font-size: 14px;
       cursor: pointer;
     }
+
+    /* FORMULARIOS CUENTAS / MOVIMIENTOS */
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 20px;
+      margin-bottom: 25px;
+    }
+    .form-box {
+      background: #161b22;
+      padding: 16px 18px;
+      border-radius: 10px;
+      font-size: 14px;
+    }
+    .form-row {
+      display: flex;
+      flex-direction: column;
+      margin-bottom: 10px;
+    }
+    .form-label {
+      font-size: 12px;
+      color: #9ca3af;
+      margin-bottom: 4px;
+    }
+    .form-input,
+    .form-select {
+      padding: 7px 9px;
+      border-radius: 6px;
+      border: 1px solid #374151;
+      background: #0d1117;
+      color: #e5e7eb;
+      font-size: 13px;
+    }
+    .form-actions {
+      margin-top: 8px;
+      display: flex;
+      justify-content: flex-end;
+    }
+    .form-submit {
+      padding: 6px 14px;
+      border-radius: 999px;
+      border: none;
+      background: #8b5cf6;
+      color: white;
+      font-size: 13px;
+      cursor: pointer;
+    }
+    .form-msg {
+      margin-top: 6px;
+      font-size: 12px;
+    }
+    .form-msg-ok {
+      color: #4caf50;
+    }
+    .form-msg-error {
+      color: #ff5252;
+    }
   </style>
 </head>
 
@@ -232,6 +294,66 @@
     <section id="accountsSection" class="hidden">
       <h2>Cuentas</h2>
 
+      <!-- Formularios -->
+      <div class="form-grid">
+        <!-- Alta cuenta -->
+        <div class="form-box">
+          <h3>Agregar cuenta</h3>
+          <div class="form-row">
+            <label class="form-label" for="accName">Nombre / etiqueta</label>
+            <input id="accName" class="form-input" placeholder="Ej: FT 100k eval dic-25" />
+          </div>
+          <div class="form-row">
+            <label class="form-label" for="accType">Tipo</label>
+            <select id="accType" class="form-select">
+              <option value="evaluation">Evaluación</option>
+              <option value="live">Live</option>
+            </select>
+          </div>
+          <div class="form-row">
+            <label class="form-label" for="accStatus">Estado</label>
+            <input id="accStatus" class="form-input" placeholder="Activa, Quemada, Pausada..." />
+          </div>
+          <div class="form-row">
+            <label class="form-label" for="accPrice">Precio (USD)</label>
+            <input id="accPrice" type="number" step="0.01" class="form-input" />
+          </div>
+          <div class="form-row">
+            <label class="form-label" for="accSize">Tamaño de cuenta</label>
+            <input id="accSize" type="number" class="form-input" placeholder="Ej: 100000" />
+          </div>
+          <div class="form-row">
+            <label class="form-label" for="accStart">Fecha de inicio</label>
+            <input id="accStart" type="date" class="form-input" />
+          </div>
+          <div class="form-actions">
+            <button class="form-submit" id="saveAccountBtn">Guardar cuenta</button>
+          </div>
+          <div id="accountMsg" class="form-msg"></div>
+        </div>
+
+        <!-- Alta movimiento -->
+        <div class="form-box">
+          <h3>Registrar movimiento</h3>
+          <div class="form-row">
+            <label class="form-label" for="txType">Tipo de movimiento</label>
+            <select id="txType" class="form-select">
+              <option value="expense">Gasto (compra, mensualidad, fee)</option>
+              <option value="withdrawal">Retiro</option>
+            </select>
+          </div>
+          <div class="form-row">
+            <label class="form-label" for="txAmount">Monto (USD)</label>
+            <input id="txAmount" type="number" step="0.01" class="form-input" />
+          </div>
+          <div class="form-actions">
+            <button class="form-submit" id="saveTxBtn">Guardar movimiento</button>
+          </div>
+          <div id="txMsg" class="form-msg"></div>
+        </div>
+      </div>
+
+      <!-- Tabla de cuentas -->
       <table>
         <thead>
           <tr>
@@ -319,9 +441,6 @@
           .eq("user_id", USER_ID);
 
         if (txError) throw txError;
-
-        console.log("Accounts:", accounts);
-        console.log("Transactions:", transactions);
 
         updateCards(accounts || [], transactions || []);
         updateAccountsTable(accounts || []);
@@ -419,7 +538,7 @@
       });
     }
 
-    // NAV
+    // ==== NAV ====
     const btnDashboard = document.getElementById("btnDashboard");
     const btnAccounts  = document.getElementById("btnAccounts");
     const btnLogin     = document.getElementById("btnLogin");
@@ -448,6 +567,98 @@
     btnDashboard.onclick = () => setActive("dashboard");
     btnAccounts.onclick  = () => setActive("accounts");
     btnLogin.onclick     = () => setActive("login");
+
+    // ==== FORM: GUARDAR CUENTA ====
+    const saveAccountBtn = document.getElementById("saveAccountBtn");
+    const accountMsg     = document.getElementById("accountMsg");
+
+    saveAccountBtn.onclick = async () => {
+      accountMsg.textContent = "";
+      accountMsg.className = "form-msg";
+
+      const name   = document.getElementById("accName").value.trim();
+      const type   = document.getElementById("accType").value;
+      const status = document.getElementById("accStatus").value.trim();
+      const price  = parseFloat(document.getElementById("accPrice").value || "0");
+      const size   = document.getElementById("accSize").value
+        ? parseFloat(document.getElementById("accSize").value)
+        : null;
+      const start  = document.getElementById("accStart").value || null;
+
+      if (!name) {
+        accountMsg.textContent = "El nombre de la cuenta es obligatorio.";
+        accountMsg.classList.add("form-msg-error");
+        return;
+      }
+
+      try {
+        const { error } = await supabaseClient.from("accounts").insert([{
+          user_id: USER_ID,
+          name,
+          type,
+          status,
+          price,
+          size,
+          start_date: start,
+        }]);
+
+        if (error) throw error;
+
+        accountMsg.textContent = "Cuenta guardada correctamente.";
+        accountMsg.classList.add("form-msg-ok");
+
+        document.getElementById("accName").value = "";
+        document.getElementById("accStatus").value = "";
+        document.getElementById("accPrice").value = "";
+        document.getElementById("accSize").value = "";
+        document.getElementById("accStart").value = "";
+
+        await loadDashboard();
+      } catch (err) {
+        console.error("Error guardando cuenta:", err);
+        accountMsg.textContent = "Error al guardar la cuenta.";
+        accountMsg.classList.add("form-msg-error");
+      }
+    };
+
+    // ==== FORM: GUARDAR MOVIMIENTO ====
+    const saveTxBtn = document.getElementById("saveTxBtn");
+    const txMsg     = document.getElementById("txMsg");
+
+    saveTxBtn.onclick = async () => {
+      txMsg.textContent = "";
+      txMsg.className = "form-msg";
+
+      const type   = document.getElementById("txType").value;
+      const amount = parseFloat(document.getElementById("txAmount").value || "0");
+
+      if (!amount || amount <= 0) {
+        txMsg.textContent = "Ingresá un monto válido.";
+        txMsg.classList.add("form-msg-error");
+        return;
+      }
+
+      try {
+        const { error } = await supabaseClient.from("transactions").insert([{
+          user_id: USER_ID,
+          type,
+          amount,
+        }]);
+
+        if (error) throw error;
+
+        txMsg.textContent = "Movimiento guardado correctamente.";
+        txMsg.classList.add("form-msg-ok");
+
+        document.getElementById("txAmount").value = "";
+
+        await loadDashboard();
+      } catch (err) {
+        console.error("Error guardando movimiento:", err);
+        txMsg.textContent = "Error al guardar el movimiento.";
+        txMsg.classList.add("form-msg-error");
+      }
+    };
 
     // Cargar datos al inicio
     loadDashboard();
